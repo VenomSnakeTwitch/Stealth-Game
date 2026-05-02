@@ -150,66 +150,119 @@ button:hover { background: #285052; }
 }
 
 .touchPad, .touchButtons {
-  pointer-events: auto;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: none;
-}
-
-.touchPad {
-  width: 132px;
-  height: 132px;
   display: grid;
-  grid-template-columns: repeat(3, 44px);
-  grid-template-rows: repeat(3, 44px);
-  gap: 0;
-  opacity: .82;
-}
-
-.touchBtn {
-  border: 2px solid #6b858d;
-  background: #13242bcc;
-  color: #d7ffe3;
-  font-family: Consolas, Monaco, monospace;
-  font-weight: bold;
-  display: grid;
-  place-items: center;
-  box-shadow: inset 0 0 0 1px #0008;
-}
-
-.touchBtn:active, .touchBtn.active {
-  background: #2c5c55dd;
-  color: #ffffff;
-}
-
-.touchPad .empty { opacity: 0; pointer-events: none; }
-
-.touchButtons {
-  display: grid;
-  grid-template-columns: repeat(2, 64px);
+  grid-template-columns: repeat(3, 64px);
   gap: 10px;
-  opacity: .86;
+  opacity: .9;
 }
 
 .touchButtons .touchBtn {
   width: 64px;
   height: 52px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.05;
+}
+
+.mobileTopBar {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  gap: 8px;
+  z-index: 25;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mobileTopBar .touchBtn {
+  min-width: 78px;
+  height: 38px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  background: #10272dcc;
 }
 
 @media (hover: none), (pointer: coarse), (max-width: 900px) {
-  body { overflow: auto; }
-  .wrap { padding-bottom: 170px; }
-  canvas { width: min(100vw - 20px, 960px); height: auto; }
-  aside { width: min(100vw - 20px, 960px); }
+  html, body {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+
+  body {
+    display: block;
+    background: #05080a;
+  }
+
+  .wrap {
+    min-height: 100vh;
+    padding: 56px 8px 168px;
+    display: block;
+  }
+
+  canvas {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 228px);
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+
+  aside {
+    width: calc(100vw - 16px);
+    min-height: auto;
+    max-height: 150px;
+    overflow: auto;
+    margin: 8px auto 0;
+    font-size: 11px;
+  }
+
+  aside h1 { font-size: 15px; }
+  .subtitle { display: none; }
+  .box { padding: 6px; margin-bottom: 6px; }
+  .box:nth-of-type(2) { display: none; }
+  .log { height: 52px; }
+  #restart { display: none; }
+
   .touchControls { display: flex; }
+  .mobileTopBar { display: flex; }
+}
+
+@media (max-width: 420px) {
+  .touchPad {
+    width: 120px;
+    height: 120px;
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(3, 40px);
+  }
+  .touchButtons {
+    grid-template-columns: repeat(3, 54px);
+    gap: 8px;
+  }
+  .touchButtons .touchBtn {
+    width: 54px;
+    height: 48px;
+    font-size: 9px;
+  }
+  .mobileTopBar .touchBtn {
+    min-width: 66px;
+    height: 34px;
+    font-size: 9px;
+  }
 }
 
   </style>
 </head>
 <body>
-  <div class="touchControls" aria-label="Touch-Steuerung">
+  <div class="mobileTopBar" aria-label="Mobile Spieloptionen">
+    <div class="touchBtn" data-mobile="start">START</div>
+    <div class="touchBtn" data-mobile="music">MUSIK</div>
+    <div class="touchBtn" data-mobile="restart">NEUSTART</div>
+  </div>  <div class="touchControls" aria-label="Touch-Steuerung">
     <div class="touchPad">
       <div class="empty"></div><div class="touchBtn" data-key="w">▲</div><div class="empty"></div>
       <div class="touchBtn" data-key="a">◀</div><div class="touchBtn" data-key="shift">SNEAK</div><div class="touchBtn" data-key="d">▶</div>
@@ -220,6 +273,8 @@ button:hover { background: #285052; }
       <div class="touchBtn" data-tap=" ">CQC</div>
       <div class="touchBtn" data-tap="q">ITEM</div>
       <div class="touchBtn" data-tap="e">USE</div>
+      <div class="touchBtn" data-tap="m">MUSIC</div>
+      <div class="touchBtn" data-mobile="restart">RESET</div>
     </div>
   </div>
   <div class="wrap">
@@ -1097,13 +1152,20 @@ button:hover { background: #285052; }
     if (k === ' ') { e.preventDefault(); cqc(); }
     if (k === 'q') { player.item = (player.item + 1) % items.length; beep(430,.04,'square',.025); }
     if (k === 'e') useItem();
-    if (k === 'm') { musicOn = !musicOn; musicOn ? startMusic() : stopMusic(); }
+    if (k === 'm') toggleMusic();
   });
 
   document.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
 
+  function toggleMusic() {
+    musicOn = !musicOn;
+    musicOn ? startMusic() : stopMusic();
+    log(musicOn ? 'Musik aktiviert.' : 'Musik deaktiviert.');
+  }
+
   function simulateTap(k) {
     bootAudio();
+    if (k === 'm') { toggleMusic(); return; }
     if (gameState === 'title') { resetGame(); return; }
     if ((gameState === 'dead' || gameState === 'win')) { resetGame(); return; }
     if (gameState !== 'play') return;
@@ -1119,6 +1181,16 @@ button:hover { background: #285052; }
     if (k === 'e') useItem();
   }
 
+  function mobileCommand(cmd) {
+    bootAudio();
+    if (cmd === 'start') {
+      if (gameState !== 'play') resetGame();
+      else log('Mission läuft bereits.');
+    }
+    if (cmd === 'music') toggleMusic();
+    if (cmd === 'restart') resetGame();
+  }
+
   touchButtons.forEach(btn => {
     const holdKey = btn.dataset.key;
     const tapKey = btn.dataset.tap;
@@ -1128,6 +1200,7 @@ button:hover { background: #285052; }
       btn.classList.add('active');
       if (holdKey) keys.add(holdKey);
       if (tapKey !== undefined) simulateTap(tapKey);
+      if (btn.dataset.mobile) mobileCommand(btn.dataset.mobile);
     };
     const up = e => {
       e.preventDefault();
@@ -1139,6 +1212,14 @@ button:hover { background: #285052; }
     btn.addEventListener('pointercancel', up);
     btn.addEventListener('pointerleave', up);
   });
+
+  window.addEventListener('contextmenu', e => {
+    if (e.target.closest('.touchControls') || e.target.closest('.mobileTopBar') || e.target === canvas) e.preventDefault();
+  });
+
+  window.addEventListener('touchmove', e => {
+    if (e.target.closest('.touchControls') || e.target.closest('.mobileTopBar') || e.target === canvas) e.preventDefault();
+  }, {passive:false});
   restartBtn.addEventListener('click', () => { bootAudio(); resetGame(); });
 
   resetGame();
@@ -1147,4 +1228,4 @@ button:hover { background: #285052; }
   requestAnimationFrame(loop);
 })();
 </script></body>
-  </html>
+</html>
