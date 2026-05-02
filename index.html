@@ -1,0 +1,1150 @@
+<!DOCTYPE html><html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shadow Serpent: Outer Silence</title>
+  <style>
+    :root {
+      --bg: #101418;
+      --panel: #1b242b;
+      --accent: #90ffb2;
+      --danger: #ff4b4b;
+      --text: #d7ffe3;
+      --muted: #8da89a;
+    }* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 20%, #263540 0, #111820 35%, #07090c 100%);
+  color: var(--text);
+  font-family: Consolas, Monaco, monospace;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.wrap {
+  display: grid;
+  grid-template-columns: auto 280px;
+  gap: 16px;
+  align-items: start;
+  padding: 16px;
+}
+
+canvas {
+  width: 960px;
+  height: 640px;
+  image-rendering: pixelated;
+  background: #141a1f;
+  border: 4px solid #465965;
+  box-shadow: 0 0 0 4px #12171b, 0 18px 50px #000a;
+}
+
+aside {
+  width: 280px;
+  background: linear-gradient(180deg, #1b252b, #11181d);
+  border: 3px solid #465965;
+  box-shadow: 0 12px 40px #0009;
+  padding: 14px;
+  min-height: 640px;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 14px;
+}
+
+.box {
+  border: 2px solid #33424b;
+  background: #0d1216cc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.box h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #b2d8ff;
+}
+
+.bar {
+  height: 12px;
+  border: 1px solid #5c737e;
+  background: #111;
+  margin: 4px 0 8px;
+}
+
+.bar > i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #3cff8f, #d0ff71);
+  width: 100%;
+}
+
+.bar.danger > i { background: linear-gradient(90deg, #ff4646, #ffb347); }
+
+kbd {
+  display: inline-block;
+  background: #233039;
+  color: #fff;
+  border: 1px solid #60737d;
+  padding: 1px 5px;
+  margin: 1px;
+  font-size: 11px;
+}
+
+.small {
+  font-size: 12px;
+  color: #c9d8d0;
+  line-height: 1.45;
+}
+
+.log {
+  height: 126px;
+  overflow: hidden;
+  font-size: 12px;
+  color: #9df7c1;
+  line-height: 1.35;
+}
+
+button {
+  width: 100%;
+  border: 2px solid #5b777b;
+  background: #1d3333;
+  color: var(--text);
+  padding: 10px;
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+button:hover { background: #285052; }
+
+@media (max-width: 1100px) {
+  .wrap { grid-template-columns: 1fr; }
+  aside { width: 960px; min-height: auto; }
+}
+
+
+.touchControls {
+  position: fixed;
+  inset: auto 0 14px 0;
+  pointer-events: none;
+  display: none;
+  justify-content: space-between;
+  align-items: end;
+  padding: 0 18px;
+  z-index: 20;
+}
+
+.touchPad, .touchButtons {
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.touchPad {
+  width: 132px;
+  height: 132px;
+  display: grid;
+  grid-template-columns: repeat(3, 44px);
+  grid-template-rows: repeat(3, 44px);
+  gap: 0;
+  opacity: .82;
+}
+
+.touchBtn {
+  border: 2px solid #6b858d;
+  background: #13242bcc;
+  color: #d7ffe3;
+  font-family: Consolas, Monaco, monospace;
+  font-weight: bold;
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px #0008;
+}
+
+.touchBtn:active, .touchBtn.active {
+  background: #2c5c55dd;
+  color: #ffffff;
+}
+
+.touchPad .empty { opacity: 0; pointer-events: none; }
+
+.touchButtons {
+  display: grid;
+  grid-template-columns: repeat(2, 64px);
+  gap: 10px;
+  opacity: .86;
+}
+
+.touchButtons .touchBtn {
+  width: 64px;
+  height: 52px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+@media (hover: none), (pointer: coarse), (max-width: 900px) {
+  body { overflow: auto; }
+  .wrap { padding-bottom: 170px; }
+  canvas { width: min(100vw - 20px, 960px); height: auto; }
+  aside { width: min(100vw - 20px, 960px); }
+  .touchControls { display: flex; }
+}
+
+  </style>
+</head>
+<body>
+  <div class="touchControls" aria-label="Touch-Steuerung">
+    <div class="touchPad">
+      <div class="empty"></div><div class="touchBtn" data-key="w">▲</div><div class="empty"></div>
+      <div class="touchBtn" data-key="a">◀</div><div class="touchBtn" data-key="shift">SNEAK</div><div class="touchBtn" data-key="d">▶</div>
+      <div class="empty"></div><div class="touchBtn" data-key="s">▼</div><div class="empty"></div>
+    </div>
+    <div class="touchButtons">
+      <div class="touchBtn" data-tap="f">FIRE</div>
+      <div class="touchBtn" data-tap=" ">CQC</div>
+      <div class="touchBtn" data-tap="q">ITEM</div>
+      <div class="touchBtn" data-tap="e">USE</div>
+    </div>
+  </div>
+  <div class="wrap">
+    <canvas id="game" width="480" height="320" aria-label="Shadow Serpent Game Canvas"></canvas>
+    <aside>
+      <h1>Shadow Serpent</h1>
+      <div class="subtitle">Outer Silence — ein originales Top‑Down‑Stealth‑Pixelspiel, inspiriert von klassischen taktischen Infiltrationsspielen.</div><div class="box">
+    <h2>Status</h2>
+    Leben
+    <div class="bar"><i id="hpBar"></i></div>
+    Alarm
+    <div class="bar danger"><i id="alertBar"></i></div>
+    <div class="small" id="stats"></div>
+  </div>
+
+  <div class="box">
+    <h2>Steuerung</h2>
+    <div class="small">
+      <kbd>WASD</kbd>/<kbd>↑↓←→</kbd> bewegen<br />
+      <kbd>Shift</kbd> schleichen<br />
+      <kbd>Space</kbd> CQC/Interaktion<br />
+      <kbd>F</kbd> Pistole<br />
+      <kbd>Q</kbd> Item wechseln<br />
+      <kbd>E</kbd> Item benutzen<br />
+      <kbd>M</kbd> Musik an/aus<br />
+      Touch: Steuerkreuz links, Aktionen rechts
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Ausrüstung</h2>
+    <div class="small" id="inv"></div>
+  </div>
+
+  <div class="box">
+    <h2>Funk</h2>
+    <div class="log" id="log"></div>
+  </div>
+
+  <button id="restart">Mission neu starten</button>
+</aside>
+
+  </div><script>
+(() => {
+  'use strict';
+
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const hpBar = document.getElementById('hpBar');
+  const alertBar = document.getElementById('alertBar');
+  const statsEl = document.getElementById('stats');
+  const invEl = document.getElementById('inv');
+  const logEl = document.getElementById('log');
+  const restartBtn = document.getElementById('restart');
+  const touchButtons = [...document.querySelectorAll('.touchBtn')];
+
+  const TILE = 16;
+  const W = canvas.width;
+  const H = canvas.height;
+  const keys = new Set();
+  let audioStarted = false;
+  let musicOn = true;
+  let last = 0;
+  let shake = 0;
+  let flash = 0;
+  let gameState = 'title';
+  let levelIndex = 0;
+  let messageTimer = 0;
+  let radioLines = [];
+
+  const audio = new (window.AudioContext || window.webkitAudioContext)();
+  let musicNodes = [];
+
+  const levels = [
+    {
+      name: 'Dock 17',
+      objective: 'Finde die Keycard und erreiche den Aufzug im Nordosten.',
+      color: '#26333a',
+      map: [
+        '##############################',
+        '#P....#.............#.......X#',
+        '#.....#..######.....#..#######',
+        '#..K.....#....#............H.#',
+        '#.....####....#######..#######',
+        '#..............G.............#',
+        '#####..###########..########.#',
+        '#......#.........#..#........#',
+        '#.######..Ammo...#..#..C.....#',
+        '#.................#..#........#',
+        '#..G..#######.....#..######..#',
+        '#.....#.....#.............#..#',
+        '#.....#..H..#######..G....#..#',
+        '#.........................#..#',
+        '##############################'
+      ],
+      guards: [
+        {x: 250, y: 90, route: [[250,90],[360,90],[360,130],[250,130]]},
+        {x: 70, y: 220, route: [[70,220],[150,220],[150,255],[70,255]]},
+        {x: 340, y: 238, route: [[340,238],[420,238],[420,270],[340,270]]}
+      ],
+      boss: null
+    },
+    {
+      name: 'Forschungsblock B',
+      objective: 'Sabotiere den Datenkern und kämpfe dich zum Sicherheitslift durch.',
+      color: '#2c2935',
+      map: [
+        '##############################',
+        '#P.......#......#..........X.#',
+        '#.#####..#..G...#..###########',
+        '#.#...#.........#...........H#',
+        '#.#.C.########..######..######',
+        '#.#.............#............#',
+        '#.######..############..G....#',
+        '#...............D............#',
+        '######..###############..#####',
+        '#....#..#.............#......#',
+        '#.H..#..#..Ammo.......#..C...#',
+        '#....#..######..#######......#',
+        '#........G...................#',
+        '#.............K..............#',
+        '##############################'
+      ],
+      guards: [
+        {x: 185, y: 45, route: [[185,45],[235,45],[235,98],[185,98]]},
+        {x: 390, y: 140, route: [[390,140],[440,140],[440,210],[390,210]]},
+        {x: 150, y: 260, route: [[150,260],[280,260],[280,230],[150,230]]},
+        {x: 320, y: 80, route: [[320,80],[390,80],[390,112],[320,112]]}
+      ],
+      boss: {name: 'Psycho Jackal', x: 238, y: 154, hp: 80, phase: 0}
+    },
+    {
+      name: 'Hangar des Schienengiganten',
+      objective: 'Zerstöre den zweibeinigen Prototypen und entkomme.',
+      color: '#332a24',
+      map: [
+        '##############################',
+        '#P..........................X#',
+        '#..#######..########..########',
+        '#..#.....#..#......#.........#',
+        '#..#..H..#..#..C...#..Ammo...#',
+        '#..#.....#..#......#.........#',
+        '#..#######..########..########',
+        '#............................#',
+        '#..........########..........#',
+        '#..........#......#..........#',
+        '#..G.......#..B...#.......G..#',
+        '#..........#......#..........#',
+        '#..........########..........#',
+        '#............................#',
+        '##############################'
+      ],
+      guards: [
+        {x: 70, y: 230, route: [[70,230],[160,230],[160,265],[70,265]]},
+        {x: 410, y: 230, route: [[410,230],[315,230],[315,265],[410,265]]}
+      ],
+      boss: {name: 'Goliath Gear', x: 240, y: 208, hp: 160, phase: 0}
+    }
+  ];
+
+  let walls = [];
+  let pickups = [];
+  let cameras = [];
+  let doors = [];
+  let exit = null;
+  let guards = [];
+  let bullets = [];
+  let enemyBullets = [];
+  let particles = [];
+  let boss = null;
+
+  const player = {
+    x: 32, y: 32, w: 10, h: 12,
+    vx: 0, vy: 0,
+    dir: {x: 1, y: 0},
+    hp: 100,
+    ammo: 16,
+    rations: 2,
+    card: false,
+    c4: 0,
+    item: 0,
+    invuln: 0,
+    hidden: false,
+    kills: 0
+  };
+
+  const items = ['Ration', 'Card', 'C4'];
+
+  function log(text) {
+    radioLines.unshift('> ' + text);
+    radioLines = radioLines.slice(0, 7);
+    logEl.innerHTML = radioLines.join('<br>');
+  }
+
+  function rects(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function dist(a, b) {
+    const dx = a.x - b.x, dy = a.y - b.y;
+    return Math.hypot(dx, dy);
+  }
+
+  function beep(freq = 440, dur = 0.06, type = 'square', gain = 0.04) {
+    if (!audioStarted) return;
+    const o = audio.createOscillator();
+    const g = audio.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.value = gain;
+    o.connect(g).connect(audio.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + dur);
+    o.stop(audio.currentTime + dur);
+  }
+
+  function noise(dur = 0.12, gain = 0.06) {
+    if (!audioStarted) return;
+    const bufferSize = audio.sampleRate * dur;
+    const buffer = audio.createBuffer(1, bufferSize, audio.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = audio.createBufferSource();
+    const g = audio.createGain();
+    g.gain.value = gain;
+    src.buffer = buffer;
+    src.connect(g).connect(audio.destination);
+    src.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + dur);
+  }
+
+  function startMusic() {
+    if (!musicOn || !audioStarted || musicNodes.length) return;
+    const bass = audio.createOscillator();
+    const lead = audio.createOscillator();
+    const bg = audio.createGain();
+    const lg = audio.createGain();
+    bass.type = 'sawtooth';
+    lead.type = 'triangle';
+    bg.gain.value = 0.025;
+    lg.gain.value = 0.015;
+    bass.connect(bg).connect(audio.destination);
+    lead.connect(lg).connect(audio.destination);
+    bass.start();
+    lead.start();
+    musicNodes = [bass, lead, bg, lg];
+    let step = 0;
+    const bassNotes = [55, 55, 65.41, 61.74, 55, 73.42, 65.41, 49];
+    const leadNotes = [220, 246.94, 196, 174.61, 220, 293.66, 261.63, 196];
+    const tick = () => {
+      if (!musicNodes.length) return;
+      bass.frequency.setValueAtTime(bassNotes[step % bassNotes.length], audio.currentTime);
+      lead.frequency.setValueAtTime(leadNotes[(step + 2) % leadNotes.length], audio.currentTime);
+      step++;
+      setTimeout(tick, 340);
+    };
+    tick();
+  }
+
+  function stopMusic() {
+    musicNodes.forEach(n => { try { if (n.stop) n.stop(); } catch(e) {} });
+    musicNodes = [];
+  }
+
+  function bootAudio() {
+    if (!audioStarted) {
+      audio.resume();
+      audioStarted = true;
+      startMusic();
+    }
+  }
+
+  function loadLevel(i) {
+    levelIndex = i;
+    const data = levels[levelIndex];
+    walls = [];
+    pickups = [];
+    cameras = [];
+    doors = [];
+    guards = [];
+    bullets = [];
+    enemyBullets = [];
+    particles = [];
+    boss = data.boss ? {...data.boss, w: data.boss.name === 'Goliath Gear' ? 34 : 18, h: data.boss.name === 'Goliath Gear' ? 32 : 20, shot: 0, dash: 0} : null;
+
+    data.map.forEach((row, y) => {
+      [...row].forEach((ch, x) => {
+        const px = x * TILE, py = y * TILE;
+        if (ch === '#') walls.push({x: px, y: py, w: TILE, h: TILE});
+        if (ch === 'P') { player.x = px + 3; player.y = py + 2; }
+        if (ch === 'X') exit = {x: px, y: py, w: TILE, h: TILE};
+        if (ch === 'K') pickups.push({type: 'card', x: px + 3, y: py + 3, w: 10, h: 10});
+        if (ch === 'H') pickups.push({type: 'ration', x: px + 3, y: py + 3, w: 10, h: 10});
+        if (ch === 'A') pickups.push({type: 'ammo', x: px + 3, y: py + 3, w: 10, h: 10});
+        if (ch === 'C') cameras.push({x: px + 4, y: py + 4, w: 8, h: 8, a: 0, spin: Math.random() > .5 ? 1 : -1});
+        if (ch === 'D') doors.push({x: px, y: py, w: TILE, h: TILE, locked: true});
+        if (ch === 'B') pickups.push({type: 'c4', x: px + 3, y: py + 3, w: 10, h: 10});
+      });
+    });
+
+    data.guards.forEach(g => guards.push({
+      x: g.x, y: g.y, w: 11, h: 13, hp: 30, route: g.route, target: 1, speed: 26, alert: 0, shot: 0, dir: {x: 1, y: 0}
+    }));
+
+    player.hp = Math.max(player.hp, 70);
+    player.invuln = 1;
+    gameState = 'play';
+    flash = 1;
+    log('Mission: ' + data.name);
+    log(data.objective);
+  }
+
+  function resetGame() {
+    Object.assign(player, {hp:100, ammo:16, rations:2, card:false, c4:0, item:0, kills:0, invuln:0});
+    loadLevel(0);
+    log('Funkkontakt hergestellt. Schleichen ist leiser als Rennen.');
+  }
+
+  function solidMove(obj, dx, dy) {
+    obj.x += dx;
+    for (const w of [...walls, ...doors.filter(d => d.locked)]) if (rects(obj, w)) {
+      if (dx > 0) obj.x = w.x - obj.w;
+      if (dx < 0) obj.x = w.x + w.w;
+    }
+    obj.y += dy;
+    for (const w of [...walls, ...doors.filter(d => d.locked)]) if (rects(obj, w)) {
+      if (dy > 0) obj.y = w.y - obj.h;
+      if (dy < 0) obj.y = w.y + w.h;
+    }
+  }
+
+  function rayClear(ax, ay, bx, by) {
+    const steps = Math.ceil(Math.hypot(bx - ax, by - ay) / 6);
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const p = {x: ax + (bx - ax) * t, y: ay + (by - ay) * t, w: 2, h: 2};
+      if (walls.some(w => rects(p, w)) || doors.some(d => d.locked && rects(p, d))) return false;
+    }
+    return true;
+  }
+
+  function canSeeGuard(g) {
+    const px = player.x + player.w / 2;
+    const py = player.y + player.h / 2;
+    const gx = g.x + g.w / 2;
+    const gy = g.y + g.h / 2;
+    const d = Math.hypot(px - gx, py - gy);
+    if (d > 95 || player.hidden) return false;
+    const dot = ((px - gx) * g.dir.x + (py - gy) * g.dir.y) / Math.max(1, d);
+    return dot > 0.35 && rayClear(gx, gy, px, py);
+  }
+
+  function canSeeCamera(c) {
+    const px = player.x + player.w / 2;
+    const py = player.y + player.h / 2;
+    const cx = c.x + 4;
+    const cy = c.y + 4;
+    const vx = Math.cos(c.a), vy = Math.sin(c.a);
+    const d = Math.hypot(px - cx, py - cy);
+    if (d > 105 || player.hidden) return false;
+    const dot = ((px - cx) * vx + (py - cy) * vy) / Math.max(1, d);
+    return dot > 0.55 && rayClear(cx, cy, px, py);
+  }
+
+  function addParticles(x, y, n, color) {
+    for (let i = 0; i < n; i++) particles.push({
+      x, y, vx: (Math.random() - .5) * 80, vy: (Math.random() - .5) * 80, life: .5 + Math.random() * .5, color
+    });
+  }
+
+  function shoot(from, dir, hostile = false) {
+    const speed = hostile ? 120 : 180;
+    const b = {x: from.x + from.w / 2 - 2, y: from.y + from.h / 2 - 2, w: 4, h: 4, vx: dir.x * speed, vy: dir.y * speed, life: 1.3};
+    (hostile ? enemyBullets : bullets).push(b);
+    beep(hostile ? 190 : 520, .04, 'square', .035);
+    if (!hostile) noise(.03, .025);
+  }
+
+  function useItem() {
+    const current = items[player.item];
+    if (current === 'Ration') {
+      if (player.rations > 0 && player.hp < 100) {
+        player.rations--;
+        player.hp = Math.min(100, player.hp + 45);
+        beep(780, .12, 'triangle', .04);
+        log('Ration benutzt. Körper stabilisiert.');
+      } else log('Keine Ration nötig oder vorhanden.');
+    }
+    if (current === 'Card') {
+      const near = doors.find(d => dist(player, d) < 28);
+      if (near && player.card) {
+        near.locked = false;
+        beep(880, .08, 'square', .04);
+        log('Sicherheitstür geöffnet.');
+      } else log('Keine passende Tür in Reichweite.');
+    }
+    if (current === 'C4') {
+      if (player.c4 > 0) {
+        player.c4--;
+        const cx = player.x + player.dir.x * 14;
+        const cy = player.y + player.dir.y * 14;
+        addParticles(cx, cy, 32, '#ffb24a');
+        noise(.25, .08);
+        shake = .3;
+        if (boss && Math.hypot((boss.x + boss.w/2) - cx, (boss.y + boss.h/2) - cy) < 60) {
+          boss.hp -= 45;
+          log('C4-Treffer auf ' + boss.name + '!');
+        }
+      } else log('Kein C4 im Inventar.');
+    }
+  }
+
+  function damagePlayer(amount) {
+    if (player.invuln > 0) return;
+    player.hp -= amount;
+    player.invuln = .6;
+    shake = .18;
+    flash = .4;
+    beep(80, .1, 'sawtooth', .05);
+    if (player.hp <= 0) {
+      gameState = 'dead';
+      stopMusic();
+      log('Vitalzeichen verloren. Mission gescheitert.');
+    }
+  }
+
+  function update(dt) {
+    if (gameState !== 'play') return;
+    const level = levels[levelIndex];
+    messageTimer -= dt;
+    player.invuln -= dt;
+    shake = Math.max(0, shake - dt);
+    flash = Math.max(0, flash - dt);
+
+    let ax = 0, ay = 0;
+    if (keys.has('w') || keys.has('arrowup')) ay--;
+    if (keys.has('s') || keys.has('arrowdown')) ay++;
+    if (keys.has('a') || keys.has('arrowleft')) ax--;
+    if (keys.has('d') || keys.has('arrowright')) ax++;
+    const len = Math.hypot(ax, ay) || 1;
+    ax /= len; ay /= len;
+    if (ax || ay) player.dir = {x: ax, y: ay};
+    const sneaking = keys.has('shift');
+    const speed = sneaking ? 46 : 76;
+    player.hidden = false;
+    solidMove(player, ax * speed * dt, ay * speed * dt);
+
+    pickups = pickups.filter(p => {
+      if (!rects(player, p)) return true;
+      if (p.type === 'ration') { player.rations++; log('Ration gefunden.'); beep(720,.08,'triangle',.04); }
+      if (p.type === 'ammo') { player.ammo += 10; log('Munition gefunden.'); beep(650,.08,'square',.04); }
+      if (p.type === 'card') { player.card = true; log('Keycard erhalten. Türen der Sicherheitsstufe B freigeschaltet.'); beep(980,.1,'triangle',.04); }
+      if (p.type === 'c4') { player.c4++; log('C4-Sprengsatz aufgenommen. Gegen schwere Panzerung effektiv.'); beep(520,.08,'sawtooth',.04); }
+      return false;
+    });
+
+    if (rects(player, exit)) {
+      if (boss && boss.hp > 0) {
+        log('Der Ausgang ist blockiert. Bossziel muss ausgeschaltet werden.');
+      } else if (levelIndex < levels.length - 1) {
+        loadLevel(levelIndex + 1);
+      } else {
+        gameState = 'win';
+        stopMusic();
+        log('Outer Silence neutralisiert. Mission abgeschlossen.');
+      }
+    }
+
+    cameras.forEach(c => {
+      c.a += c.spin * dt * .9;
+      if (canSeeCamera(c)) {
+        enemyAlert(1.2 * dt);
+      }
+    });
+
+    guards.forEach(g => {
+      if (g.hp <= 0) return;
+      const target = g.alert > 0 ? [player.x, player.y] : g.route[g.target];
+      const dx = target[0] - g.x, dy = target[1] - g.y;
+      const l = Math.hypot(dx, dy) || 1;
+      g.dir = {x: dx / l, y: dy / l};
+      const gs = g.alert > 0 ? 48 : g.speed;
+      solidMove(g, g.dir.x * gs * dt, g.dir.y * gs * dt);
+      if (!g.alert && Math.hypot(dx, dy) < 6) g.target = (g.target + 1) % g.route.length;
+      if (canSeeGuard(g)) enemyAlert(1.6 * dt), g.alert = 3;
+      if (!sneaking && dist(g, player) < 45 && !player.hidden) g.alert = 2.5;
+      g.alert = Math.max(0, g.alert - dt);
+      g.shot -= dt;
+      if (g.alert > 0 && g.shot <= 0 && rayClear(g.x, g.y, player.x, player.y)) {
+        g.shot = .9 + Math.random() * .4;
+        shoot(g, g.dir, true);
+      }
+      if (rects(g, player)) damagePlayer(12);
+    });
+    guards = guards.filter(g => g.hp > -10);
+
+    if (boss && boss.hp > 0) updateBoss(dt);
+
+    updateBullets(dt);
+    updateParticles(dt);
+    updateUI();
+  }
+
+  let globalAlert = 0;
+  function enemyAlert(v) {
+    if (globalAlert <= 0) log('ALARM! Gegner haben deine Position erfasst.');
+    globalAlert = Math.min(100, globalAlert + v * 80);
+    flash = Math.max(flash, .08);
+  }
+
+  function updateBoss(dt) {
+    boss.shot -= dt;
+    const dx = player.x - boss.x, dy = player.y - boss.y;
+    const l = Math.hypot(dx, dy) || 1;
+    const dir = {x: dx/l, y: dy/l};
+    if (boss.name === 'Psycho Jackal') {
+      boss.x += dir.x * 34 * dt;
+      boss.y += dir.y * 34 * dt;
+      if (boss.shot <= 0) {
+        boss.shot = .65;
+        for (let i = -1; i <= 1; i++) {
+          const a = Math.atan2(dir.y, dir.x) + i * .28;
+          shoot(boss, {x: Math.cos(a), y: Math.sin(a)}, true);
+        }
+        log('Psycho Jackal setzt Blendfeuer ein!');
+      }
+    } else {
+      if (boss.shot <= 0) {
+        boss.shot = .9;
+        for (let i = 0; i < 8; i++) {
+          const a = i / 8 * Math.PI * 2 + performance.now() / 900;
+          shoot(boss, {x: Math.cos(a), y: Math.sin(a)}, true);
+        }
+        shake = .15;
+      }
+    }
+    boss.x = Math.max(20, Math.min(W - boss.w - 20, boss.x));
+    boss.y = Math.max(20, Math.min(H - boss.h - 20, boss.y));
+    if (rects(boss, player)) damagePlayer(boss.name === 'Goliath Gear' ? 20 : 14);
+  }
+
+  function updateBullets(dt) {
+    for (const list of [bullets, enemyBullets]) {
+      for (const b of list) {
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.life -= dt;
+        if (walls.some(w => rects(b, w)) || doors.some(d => d.locked && rects(b, d))) b.life = -1;
+      }
+    }
+
+    bullets.forEach(b => {
+      guards.forEach(g => {
+        if (g.hp > 0 && rects(b, g)) {
+          g.hp -= 24;
+          b.life = -1;
+          addParticles(g.x + 5, g.y + 6, 8, '#e9ff99');
+          if (g.hp <= 0) { player.kills++; log('Wache ausgeschaltet.'); }
+        }
+      });
+      if (boss && boss.hp > 0 && rects(b, boss)) {
+        boss.hp -= 10;
+        b.life = -1;
+        addParticles(boss.x + boss.w/2, boss.y + boss.h/2, 10, '#ffde6b');
+        if (boss.hp <= 0) {
+          log(boss.name + ' zerstört. Ausgang offen.');
+          noise(.4, .12);
+          shake = .6;
+        }
+      }
+    });
+
+    enemyBullets.forEach(b => {
+      if (rects(b, player)) {
+        b.life = -1;
+        damagePlayer(9);
+      }
+    });
+
+    bullets = bullets.filter(b => b.life > 0);
+    enemyBullets = enemyBullets.filter(b => b.life > 0);
+    globalAlert = Math.max(0, globalAlert - dt * 5);
+  }
+
+  function updateParticles(dt) {
+    particles.forEach(p => {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.life -= dt;
+      p.vx *= .96;
+      p.vy *= .96;
+    });
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  function draw() {
+    ctx.save();
+    if (shake > 0) ctx.translate((Math.random() - .5) * 4, (Math.random() - .5) * 4);
+    drawLevel();
+    if (gameState === 'title') drawTitle();
+    if (gameState === 'dead') drawOverlay('MISSION GESCHEITERT', 'Drücke Enter oder klicke „Mission neu starten“.');
+    if (gameState === 'win') drawOverlay('MISSION ERFOLGREICH', 'Shadow Serpent hat den Prototypen neutralisiert.');
+    ctx.restore();
+  }
+
+  function drawLevel() {
+    const data = levels[levelIndex] || levels[0];
+    ctx.fillStyle = data.color;
+    ctx.fillRect(0, 0, W, H);
+
+    for (let y = 0; y < H; y += TILE) {
+      for (let x = 0; x < W; x += TILE) {
+        ctx.fillStyle = ((x/TILE + y/TILE) % 2) ? '#00000010' : '#ffffff08';
+        ctx.fillRect(x, y, TILE, TILE);
+        ctx.fillStyle = '#ffffff10';
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+
+    ctx.fillStyle = '#0b0f11';
+    walls.forEach(w => {
+      ctx.fillRect(w.x, w.y, w.w, w.h);
+      ctx.fillStyle = '#31404a'; ctx.fillRect(w.x+1, w.y+1, w.w-2, 3);
+      ctx.fillStyle = '#0b0f11';
+    });
+
+    doors.forEach(d => {
+      ctx.fillStyle = d.locked ? '#663939' : '#283b2c';
+      ctx.fillRect(d.x, d.y, d.w, d.h);
+      ctx.fillStyle = '#f1ff96';
+      ctx.fillRect(d.x + 7, d.y + 2, 2, 12);
+    });
+
+    if (exit) {
+      ctx.fillStyle = '#2dff8e';
+      ctx.fillRect(exit.x + 2, exit.y + 2, 12, 12);
+      ctx.fillStyle = '#112217';
+      ctx.fillRect(exit.x + 5, exit.y + 5, 6, 6);
+    }
+
+    pickups.forEach(drawPickup);
+    cameras.forEach(drawCamera);
+    guards.forEach(drawGuard);
+    if (boss && boss.hp > 0) drawBoss();
+    bullets.forEach(b => { ctx.fillStyle = '#fdff9e'; ctx.fillRect(b.x, b.y, b.w, b.h); });
+    enemyBullets.forEach(b => { ctx.fillStyle = '#ff5b5b'; ctx.fillRect(b.x, b.y, b.w, b.h); });
+    drawPlayer();
+    particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 2, 2); });
+
+    drawHUD();
+    if (flash > 0) {
+      ctx.fillStyle = `rgba(255,40,40,${Math.min(.2, flash*.35)})`;
+      ctx.fillRect(0,0,W,H);
+    }
+  }
+
+  function drawPickup(p) {
+    const colors = {ration:'#9dff9d', ammo:'#ffe071', card:'#7ee7ff', c4:'#ff9d6e'};
+    ctx.fillStyle = colors[p.type];
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.fillStyle = '#101010';
+    ctx.fillRect(p.x+3, p.y+3, 4, 4);
+  }
+
+  function drawCamera(c) {
+    ctx.fillStyle = '#9cb1bd';
+    ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.fillStyle = '#ff5959';
+    ctx.fillRect(c.x+3, c.y+3, 2, 2);
+    ctx.fillStyle = 'rgba(255,80,80,.16)';
+    ctx.beginPath();
+    ctx.moveTo(c.x+4, c.y+4);
+    ctx.arc(c.x+4, c.y+4, 90, c.a-.38, c.a+.38);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawGuard(g) {
+    if (g.hp <= 0) return;
+    ctx.fillStyle = g.alert > 0 ? '#ff6969' : '#bcc7a0';
+    ctx.fillRect(g.x, g.y, g.w, g.h);
+    ctx.fillStyle = '#253128';
+    ctx.fillRect(g.x+2, g.y+2, 7, 3);
+    ctx.fillStyle = 'rgba(255,220,90,.12)';
+    ctx.beginPath();
+    ctx.moveTo(g.x+5, g.y+6);
+    ctx.arc(g.x+5, g.y+6, 70, Math.atan2(g.dir.y,g.dir.x)-.45, Math.atan2(g.dir.y,g.dir.x)+.45);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawPlayer() {
+    const blink = player.invuln > 0 && Math.floor(performance.now()/80)%2;
+    if (blink) return;
+    ctx.fillStyle = '#3aff89';
+    ctx.fillRect(player.x, player.y, player.w, player.h);
+    ctx.fillStyle = '#17251b';
+    ctx.fillRect(player.x + 2, player.y + 2, 6, 3);
+    ctx.fillStyle = '#b9ffd1';
+    ctx.fillRect(player.x + player.dir.x * 6 + 4, player.y + player.dir.y * 6 + 5, 3, 3);
+  }
+
+  function drawBoss() {
+    if (boss.name === 'Goliath Gear') {
+      ctx.fillStyle = '#9a6d4f';
+      ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
+      ctx.fillStyle = '#2a1913';
+      ctx.fillRect(boss.x+7, boss.y+6, 20, 10);
+      ctx.fillStyle = '#ff3333';
+      ctx.fillRect(boss.x+14, boss.y+9, 6, 3);
+      ctx.fillStyle = '#c49a77';
+      ctx.fillRect(boss.x+3, boss.y+25, 8, 10);
+      ctx.fillRect(boss.x+23, boss.y+25, 8, 10);
+    } else {
+      ctx.fillStyle = '#d67cff';
+      ctx.fillRect(boss.x, boss.y, boss.w, boss.h);
+      ctx.fillStyle = '#291235';
+      ctx.fillRect(boss.x+4, boss.y+4, 10, 5);
+    }
+    ctx.fillStyle = '#000'; ctx.fillRect(150, 5, 180, 8);
+    ctx.fillStyle = '#ff6262'; ctx.fillRect(151, 6, Math.max(0,178 * boss.hp / (boss.name === 'Goliath Gear' ? 160 : 80)), 6);
+    ctx.fillStyle = '#fff'; ctx.font = '8px monospace'; ctx.fillText(boss.name, 154, 22);
+  }
+
+  function drawHUD() {
+    ctx.fillStyle = '#0008'; ctx.fillRect(6, 6, 118, 38);
+    ctx.fillStyle = '#baffc8'; ctx.font = '8px monospace';
+    ctx.fillText('LEVEL: ' + levels[levelIndex].name, 10, 16);
+    ctx.fillText('HP ' + Math.max(0, Math.ceil(player.hp)) + '  AMMO ' + player.ammo, 10, 27);
+    ctx.fillText('ITEM: ' + items[player.item], 10, 38);
+    if (globalAlert > 0) {
+      ctx.fillStyle = '#ff4d4d';
+      ctx.fillText('ALERT ' + Math.ceil(globalAlert), 380, 16);
+    } else {
+      ctx.fillStyle = '#8dffc1';
+      ctx.fillText('SNEAK', 410, 16);
+    }
+    drawRadar();
+  }
+
+  function drawRadar() {
+    const rx = W - 104;
+    const ry = H - 104;
+    const rw = 94;
+    const rh = 94;
+    const scale = 0.19;
+
+    ctx.fillStyle = '#03100ccc';
+    ctx.fillRect(rx, ry, rw, rh);
+    ctx.strokeStyle = globalAlert > 0 ? '#ff5555' : '#6dff9d';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(rx + .5, ry + .5, rw - 1, rh - 1);
+
+    ctx.fillStyle = '#11332688';
+    for (let i = 1; i < 4; i++) {
+      ctx.fillRect(rx + i * rw / 4, ry + 2, 1, rh - 4);
+      ctx.fillRect(rx + 2, ry + i * rh / 4, rw - 4, 1);
+    }
+
+    const cx = rx + rw / 2;
+    const cy = ry + rh / 2;
+    const px = player.x + player.w / 2;
+    const py = player.y + player.h / 2;
+
+    function dot(wx, wy, color, size = 2, square = true) {
+      const dx = (wx - px) * scale;
+      const dy = (wy - py) * scale;
+      if (Math.abs(dx) > rw / 2 - 4 || Math.abs(dy) > rh / 2 - 4) return;
+      ctx.fillStyle = color;
+      if (square) ctx.fillRect(cx + dx - size/2, cy + dy - size/2, size, size);
+      else {
+        ctx.beginPath();
+        ctx.arc(cx + dx, cy + dy, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    walls.forEach((w, idx) => {
+      if (idx % 2 === 0) dot(w.x + 8, w.y + 8, '#314b42', 1);
+    });
+
+    pickups.forEach(p => {
+      const color = p.type === 'ration' ? '#8dff8d' : p.type === 'ammo' ? '#ffe071' : p.type === 'card' ? '#71dfff' : '#ff9d6e';
+      dot(p.x + p.w/2, p.y + p.h/2, color, 3, false);
+    });
+
+    guards.forEach(g => {
+      if (g.hp > 0) dot(g.x + g.w/2, g.y + g.h/2, g.alert > 0 ? '#ff4545' : '#ffdd69', 3);
+    });
+
+    cameras.forEach(c => dot(c.x + 4, c.y + 4, '#ff79d7', 2));
+    if (boss && boss.hp > 0) dot(boss.x + boss.w/2, boss.y + boss.h/2, '#ff3030', 5, false);
+    if (exit) dot(exit.x + 8, exit.y + 8, '#4cff9a', 4, false);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(cx - 2, cy - 2, 4, 4);
+    ctx.fillStyle = globalAlert > 0 ? '#ff5555' : '#9affba';
+    ctx.font = '7px monospace';
+    ctx.fillText('SOLITON', rx + 5, ry + 9);
+    ctx.fillText(globalAlert > 0 ? 'JAM' : 'RADAR', rx + 57, ry + 9);
+  }
+
+  function drawTitle() {
+    ctx.fillStyle = '#000c'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#9affba'; ctx.font = '22px monospace';
+    ctx.fillText('SHADOW SERPENT', 130, 108);
+    ctx.fillStyle = '#d7ffe3'; ctx.font = '10px monospace';
+    ctx.fillText('Outer Silence', 198, 128);
+    ctx.fillText('Top-Down Tactical Stealth Pixel Game', 135, 150);
+    ctx.fillText('Drücke Enter zum Starten', 170, 184);
+    ctx.fillStyle = '#7da891';
+    ctx.fillText('WASD bewegen · Shift schleichen · Space CQC · F schießen', 82, 214);
+  }
+
+  function drawOverlay(title, sub) {
+    ctx.fillStyle = '#000c'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = title.includes('ERFOLG') ? '#9affba' : '#ff6b6b';
+    ctx.font = '20px monospace'; ctx.fillText(title, 130, 132);
+    ctx.fillStyle = '#d7ffe3'; ctx.font = '10px monospace'; ctx.fillText(sub, 95, 160);
+    ctx.fillText('Kills: ' + player.kills + ' · Rationen: ' + player.rations, 170, 184);
+  }
+
+  function updateUI() {
+    hpBar.style.width = Math.max(0, player.hp) + '%';
+    alertBar.style.width = globalAlert + '%';
+    statsEl.innerHTML = `Zone: ${levels[levelIndex].name}<br>Munition: ${player.ammo}<br>Rationen: ${player.rations}<br>Keycard: ${player.card ? 'Ja' : 'Nein'}<br>C4: ${player.c4}`;
+    invEl.innerHTML = items.map((it, i) => `${i === player.item ? '▶' : ' '} ${it}`).join('<br>') + `<br><br>Auftrag:<br>${levels[levelIndex].objective}`;
+  }
+
+  function loop(t) {
+    const dt = Math.min(.033, (t - last) / 1000 || 0);
+    last = t;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  function cqc() {
+    const hit = {x: player.x + player.dir.x * 14, y: player.y + player.dir.y * 14, w: 18, h: 18};
+    let did = false;
+    guards.forEach(g => {
+      if (g.hp > 0 && rects(hit, g)) {
+        g.hp = 0;
+        did = true;
+        player.kills++;
+        addParticles(g.x+5, g.y+6, 12, '#e9ff99');
+      }
+    });
+    const nearDoor = doors.find(d => d.locked && rects(hit, d));
+    if (nearDoor && player.card) {
+      nearDoor.locked = false;
+      did = true;
+      log('Tür per Keycard geöffnet.');
+    }
+    if (did) { beep(180,.08,'square',.05); log('Nahkampf/Interaktion erfolgreich.'); }
+    else log('Nichts in Reichweite.');
+  }
+
+  document.addEventListener('keydown', e => {
+    bootAudio();
+    const k = e.key.toLowerCase();
+    keys.add(k);
+    if (gameState === 'title' && k === 'enter') resetGame();
+    if ((gameState === 'dead' || gameState === 'win') && k === 'enter') resetGame();
+    if (gameState !== 'play') return;
+    if (k === 'f') {
+      if (player.ammo > 0) {
+        player.ammo--;
+        shoot(player, player.dir, false);
+        enemyAlert(.25);
+      } else log('Magazin leer. Suche Munition.');
+    }
+    if (k === ' ') { e.preventDefault(); cqc(); }
+    if (k === 'q') { player.item = (player.item + 1) % items.length; beep(430,.04,'square',.025); }
+    if (k === 'e') useItem();
+    if (k === 'm') { musicOn = !musicOn; musicOn ? startMusic() : stopMusic(); }
+  });
+
+  document.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+
+  function simulateTap(k) {
+    bootAudio();
+    if (gameState === 'title') { resetGame(); return; }
+    if ((gameState === 'dead' || gameState === 'win')) { resetGame(); return; }
+    if (gameState !== 'play') return;
+    if (k === 'f') {
+      if (player.ammo > 0) {
+        player.ammo--;
+        shoot(player, player.dir, false);
+        enemyAlert(.25);
+      } else log('Magazin leer. Suche Munition.');
+    }
+    if (k === ' ') cqc();
+    if (k === 'q') { player.item = (player.item + 1) % items.length; beep(430,.04,'square',.025); }
+    if (k === 'e') useItem();
+  }
+
+  touchButtons.forEach(btn => {
+    const holdKey = btn.dataset.key;
+    const tapKey = btn.dataset.tap;
+    const down = e => {
+      e.preventDefault();
+      bootAudio();
+      btn.classList.add('active');
+      if (holdKey) keys.add(holdKey);
+      if (tapKey !== undefined) simulateTap(tapKey);
+    };
+    const up = e => {
+      e.preventDefault();
+      btn.classList.remove('active');
+      if (holdKey) keys.delete(holdKey);
+    };
+    btn.addEventListener('pointerdown', down);
+    btn.addEventListener('pointerup', up);
+    btn.addEventListener('pointercancel', up);
+    btn.addEventListener('pointerleave', up);
+  });
+  restartBtn.addEventListener('click', () => { bootAudio(); resetGame(); });
+
+  resetGame();
+  gameState = 'title';
+  updateUI();
+  requestAnimationFrame(loop);
+})();
+</script></body>
+  </html>
